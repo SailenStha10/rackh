@@ -1,35 +1,67 @@
-import { PageHero, ProfileGrid, Reveal, SectionHeading } from "@/components/ContentBlocks";
+import { PageHero, Reveal, SectionHeading } from "@/components/ContentBlocks";
 import { Footer } from "@/components/Footer";
-import { teamBlocks } from "@/lib/site-data";
+import { TeamDirectory } from "@/components/TeamDirectory";
+import { teamMembers } from "@/lib/team-data";
+import { useState } from "react";
 
 export const metadata = {
   title: "Our Team",
-  description: "Executive board, board members, committee leads, and past presidents.",
+  description: "Executive board, committee leads, and active members working with clear ownership and shared momentum.",
 };
 
 export default function TeamPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeDepartment, setActiveDepartment] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  const departments = Array.from(
+    new Set(teamMembers.map((member) => member.department))
+  );
+
+  const filteredMembers = teamMembers.filter((member) => {
+    const matchesSearch =
+      searchQuery === "" ||
+      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.shortBio.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesDepartment =
+      activeDepartment === null || member.department === activeDepartment;
+
+    return matchesSearch && matchesDepartment;
+  });
+
   return (
     <div className="mx-auto w-full max-w-7xl px-4 pb-28 pt-4 sm:px-6 lg:px-8 lg:pb-32">
       <PageHero
         kicker="Our Team"
-        title="A small leadership structure designed to move projects cleanly."
-        description="The team is organized around clear roles, reliable handoffs, and enough continuity to make each service cycle stronger than the last."
+        title="Leadership that moves projects cleanly."
+        description="Executive board, committee leads, and active members working across programs with clear ownership and shared momentum. The team structure is designed for reliable handoffs and continuity."
         primaryAction={{ label: "Join Us", href: "/join" }}
         secondaryAction={{ label: "See impact", href: "/impact" }}
       />
 
-      <section className="mt-14">
+      <section className="mt-16">
         <SectionHeading
           eyebrow="Executive and committee structure"
           title="Roles are visible, responsibilities are clear, and the club stays collaborative."
           description="The profiles below are role-based on purpose. The design should stay adaptable as the club updates leadership each year."
         />
         <div className="mt-8">
-          <ProfileGrid items={teamBlocks} />
+          <TeamDirectory
+            members={teamMembers}
+            searchQuery={searchQuery}
+            onSearch={setSearchQuery}
+            departments={departments}
+            onDepartmentChange={setActiveDepartment}
+            activeDepartment={activeDepartment}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
         </div>
       </section>
 
-      <section className="mt-16 grid gap-6 lg:grid-cols-2">
+      <section className="mt-20">
         <Reveal>
           <div className="surface rounded-[2rem] p-6 lg:p-8">
             <SectionHeading
@@ -37,38 +69,26 @@ export default function TeamPage() {
               title="The people closest to the club rhythm."
               description="The executive board keeps the calendar, communications, and service priorities aligned."
             />
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {[
-                ["President", "Direction, representation, and overall club cadence."],
-                ["Secretary", "Records, reminders, and internal coordination."],
-                ["Treasurer", "Budget clarity and responsible allocation."],
-                ["Vice President", "Support, continuity, and project oversight."],
-              ].map(([role, description]) => (
-                <div key={role as string} className="rounded-[1.35rem] border border-[color:var(--border)] bg-white/70 p-4">
-                  <h3 className="font-display text-lg font-semibold">{role as string}</h3>
-                  <p className="muted-copy mt-2 text-sm leading-7">{description as string}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Reveal>
-        <Reveal delay={0.08}>
-          <div className="surface rounded-[2rem] p-6 lg:p-8">
-            <SectionHeading
-              eyebrow="Member directory"
-              title="Optional space for a fuller public roster."
-              description="If the club wants to publish individual names later, this section can expand into a directory without changing the layout."
-            />
-            <div className="mt-8 space-y-4">
-              {[
-                "Committee leads can be listed here.",
-                "Past presidents can be grouped into a transition archive.",
-                "Social links can be added to each profile card.",
-              ].map((item) => (
-                <div key={item} className="rounded-[1.35rem] border border-[color:var(--border)] bg-white/70 p-4 text-sm leading-7">
-                  {item}
-                </div>
-              ))}
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {teamMembers
+                .filter((member) => member.featured && member.order <= 4)
+                .map((member) => (
+                  <div
+                    key={member.id}
+                    className="text-center rounded-[1.35rem] border border-[color:var(--border)] bg-white/70 p-4 hover:shadow-lg transition-shadow"
+                  >
+                    <div className="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden">
+                      <img
+                        src={member.image}
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <h3 className="font-display text-sm font-semibold">{member.name}</h3>
+                    <p className="text-rotaract-pink text-xs font-medium mt-1">{member.role}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{member.department}</p>
+                  </div>
+                ))}
             </div>
           </div>
         </Reveal>
